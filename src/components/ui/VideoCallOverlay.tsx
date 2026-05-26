@@ -59,7 +59,7 @@ export function VideoCallOverlay() {
           <div className="w-full h-full flex flex-col items-center justify-center bg-bg-deep">
             <Avatar 
               src={partner?.avatar_url} 
-              alt={partner?.name || "Partner"} 
+              alt={partner?.display_name || "Partner"} 
               size="xl" 
               className="mb-4 scale-150 shadow-2xl" 
             />
