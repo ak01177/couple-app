@@ -713,7 +713,7 @@ export default function ChatPage() {
         )}
       </AnimatePresence>
 
-      <div className="h-full flex flex-col bg-bg-deep overflow-hidden">
+      <div className="h-full flex flex-col bg-bg-deep overflow-hidden relative">
         {/* Chat Header */}
         <motion.header
           initial={{ opacity: 0, y: -10 }}
