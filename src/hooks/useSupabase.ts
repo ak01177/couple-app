@@ -564,36 +564,25 @@ export function usePresence(coupleId: string | null) {
     }
   }, [pathname]);
 
-  const setTyping = useCallback(async (isTyping: boolean) => {
+  const setTyping = useCallback((isTyping: boolean) => {
     if (!coupleId || !user) return;
 
     const channel = presenceRealtimeChannel;
     if (!channel) return;
 
+    // Clear any internal safety timeout — the chat page owns the stop timer
     if (presenceTypingTimeout) {
       clearTimeout(presenceTypingTimeout);
       presenceTypingTimeout = null;
     }
 
-    await channel.track({
+    // Fire-and-forget — don't block the caller while waiting on WebSocket
+    channel.track({
       status: "online",
       is_typing: isTyping,
       current_path: pathname,
       last_seen: new Date().toISOString(),
     });
-
-    if (isTyping) {
-      presenceTypingTimeout = setTimeout(() => {
-        if (presenceRealtimeChannel) {
-          presenceRealtimeChannel.track({
-            status: "online",
-            is_typing: false,
-            current_path: pathname,
-            last_seen: new Date().toISOString(),
-          });
-        }
-      }, 3000);
-    }
   }, [coupleId, user, pathname]);
 
   return { setTyping };

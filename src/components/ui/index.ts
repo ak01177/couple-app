@@ -1,6 +1,7 @@
 export { default as Button } from "./Button";
 export { default as Input } from "./Input";
 export { default as Avatar } from "./Avatar";
+export { default as CharacterAvatar } from "./CharacterAvatar";
 export { default as Modal } from "./Modal";
 export { default as FloatingParticles } from "./FloatingParticles";
 export { default as Skeleton } from "./Skeleton";

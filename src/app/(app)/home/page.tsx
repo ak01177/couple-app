@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FloatingParticles, Avatar, PrivateImage } from "@/components/ui";
+import { FloatingParticles, Avatar, CharacterAvatar, PrivateImage } from "@/components/ui";
 import {
   Heart,
   MessageCircle,
@@ -261,57 +261,65 @@ export default function HomePage() {
 
         {/* --- Couple Header --- */}
         <WidgetCard
-          className="!bg-bg-surface/80 backdrop-blur-sm"
+          className="!bg-bg-surface/80 backdrop-blur-sm overflow-hidden"
           delay={0.05}
         >
-          <div className="flex items-center justify-center gap-4">
-            {/* User 1 */}
-            <div className="flex flex-col items-center gap-1.5">
-              <Avatar src={user?.avatar_url} alt={user?.display_name || "Me"} size="lg" status="online" />
-              <span className="text-xs font-medium text-text-secondary truncate max-w-[80px]">
+          {/* Characters stage — clipped so feet sit on the divider */}
+          <div className="flex items-end justify-center gap-6 px-2 pt-2 pb-0">
+            {/* Me */}
+            <div className="flex flex-col items-center gap-1">
+              <CharacterAvatar
+                src={user?.avatar_url}
+                alt={user?.display_name || "Me"}
+                status="online"
+                delay={0.1}
+                headSize={48}
+                shirtColor="#7c3aed"
+                pantsColor="#1e1b4b"
+                skinColor="#f5c5a3"
+              />
+              <span className="text-xs font-medium text-text-secondary truncate max-w-[80px] mt-1">
                 {user?.display_name || "Me"}
               </span>
             </div>
 
-            {/* Heart */}
+            {/* Beating heart in the middle */}
             <motion.div
-              animate={{
-                scale: [1, 1.15, 1, 1.1, 1],
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              className="mx-2"
+              animate={{ scale: [1, 1.25, 1, 1.15, 1] }}
+              transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+              className="mb-14 shrink-0"
             >
-              <Heart
-                size={24}
-                className="text-pink fill-pink drop-shadow-lg"
-              />
+              <Heart size={26} className="text-pink fill-pink drop-shadow-lg" />
             </motion.div>
 
-            {/* User 2 */}
-            <div className="flex flex-col items-center gap-1.5">
-              <Avatar
+            {/* Partner */}
+            <div className="flex flex-col items-center gap-1">
+              <CharacterAvatar
                 src={partner?.avatar_url}
                 alt={partner?.display_name || "Partner"}
-                size="lg"
                 status={partnerPresence?.status === "online" ? "online" : "offline"}
+                delay={0.2}
+                headSize={48}
+                shirtColor="#ec4899"
+                pantsColor="#4a0025"
+                skinColor="#f5c5a3"
               />
-              <span className="text-xs font-medium text-text-secondary truncate max-w-[80px]">
+              <span className="text-xs font-medium text-text-secondary truncate max-w-[80px] mt-1">
                 {partner?.display_name || "Partner"}
               </span>
             </div>
           </div>
 
+          {/* Divider line — the "floor" */}
+          <div className="h-px bg-border/40 mx-0 mt-2" />
+
           {/* Days Counter */}
-          <div className="text-center mt-4">
+          <div className="text-center py-3">
             <motion.div
               className="text-3xl font-bold gradient-text"
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+              transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
             >
               {days}
             </motion.div>

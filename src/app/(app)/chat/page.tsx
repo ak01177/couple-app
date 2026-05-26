@@ -532,11 +532,21 @@ export default function ChatPage() {
   };
 
   const typingStopRef = useRef<NodeJS.Timeout | null>(null);
+  // Prevent spamming the presence channel on every keystroke
+  const isTrackingTyping = useRef(false);
 
   const handleTyping = useCallback(() => {
-    setTyping(true);
+    // Only emit "typing=true" when transitioning from not-typing → typing
+    if (!isTrackingTyping.current) {
+      isTrackingTyping.current = true;
+      setTyping(true);
+    }
+    // Reset the stop-timer on every keystroke
     if (typingStopRef.current) clearTimeout(typingStopRef.current);
-    typingStopRef.current = setTimeout(() => setTyping(false), 2000);
+    typingStopRef.current = setTimeout(() => {
+      isTrackingTyping.current = false;
+      setTyping(false);
+    }, 2000);
   }, [setTyping]);
 
   // Handle file select for preview
