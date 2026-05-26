@@ -132,16 +132,16 @@ export function WebRTCProvider({ children }: { children: React.ReactNode }) {
       })
       .on('broadcast', { event: 'ice-candidate' }, async ({ payload }) => {
         if (payload.senderId === user.id) return;
-        if (pcRef.current) {
-          if (pcRef.current.remoteDescription) {
-            try {
-              await pcRef.current.addIceCandidate(new RTCIceCandidate(payload.candidate));
-            } catch (e) {
-              console.error('Error adding received ice candidate', e);
-            }
-          } else {
-            iceCandidatesQueue.current.push(payload.candidate);
+
+        if (pcRef.current && pcRef.current.remoteDescription) {
+          try {
+            await pcRef.current.addIceCandidate(new RTCIceCandidate(payload.candidate));
+          } catch (e) {
+            console.error('Error adding received ice candidate', e);
           }
+        } else {
+          // Queue candidates if connection or remote description isn't ready
+          iceCandidatesQueue.current.push(payload.candidate);
         }
       })
       .on('broadcast', { event: 'end-call' }, ({ payload }) => {
