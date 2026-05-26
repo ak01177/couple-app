@@ -1,26 +1,305 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ============================================
+   AS — Private Couple App Design System
+   Warm Dark Mode | Purple + Pink
+   ============================================ */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* --- Background Layers --- */
+  --color-bg-deep: hsl(260, 12%, 7%);
+  --color-bg-base: hsl(260, 10%, 10%);
+  --color-bg-surface: hsl(260, 10%, 14%);
+  --color-bg-elevated: hsl(260, 10%, 18%);
+  --color-bg-hover: hsl(260, 10%, 22%);
+
+  /* --- Text --- */
+  --color-text-primary: hsl(260, 10%, 92%);
+  --color-text-secondary: hsl(260, 8%, 65%);
+  --color-text-muted: hsl(260, 6%, 45%);
+  --color-text-inverse: hsl(260, 12%, 7%);
+
+  /* --- Accent Purple --- */
+  --color-accent: hsl(270, 45%, 58%);
+  --color-accent-light: hsl(270, 50%, 68%);
+  --color-accent-dark: hsl(270, 40%, 45%);
+  --color-accent-muted: hsl(270, 30%, 25%);
+
+  /* --- Highlight Pink --- */
+  --color-pink: hsl(340, 45%, 62%);
+  --color-pink-light: hsl(340, 50%, 72%);
+  --color-pink-dark: hsl(340, 40%, 48%);
+  --color-pink-muted: hsl(340, 25%, 22%);
+
+  /* --- Semantic --- */
+  --color-success: hsl(160, 45%, 48%);
+  --color-warning: hsl(35, 80%, 55%);
+  --color-error: hsl(0, 55%, 55%);
+  --color-info: hsl(210, 50%, 55%);
+
+  /* --- Borders & Shadows --- */
+  --color-border: hsl(260, 10%, 20%);
+  --color-border-subtle: hsl(260, 8%, 16%);
+  --color-ring: hsl(270, 45%, 58%);
+
+  /* --- Gradients --- */
+  --color-gradient-start: hsl(270, 45%, 58%);
+  --color-gradient-end: hsl(340, 45%, 62%);
+
+  /* --- Font --- */
+  --font-sans: "Manrope", system-ui, -apple-system, sans-serif;
+
+  /* --- Spacing scale --- */
+  --spacing-18: 4.5rem;
+  --spacing-88: 22rem;
+  --spacing-100: 25rem;
+  --spacing-120: 30rem;
+
+  /* --- Border Radius --- */
+  --radius-bubble: 1.25rem;
+  --radius-card: 1rem;
+  --radius-pill: 9999px;
+  --radius-input: 0.75rem;
+
+  /* --- Animations --- */
+  --animate-fade-in: fade-in 0.4s ease-out forwards;
+  --animate-slide-up: slide-up 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  --animate-slide-in-right: slide-in-right 0.35s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  --animate-slide-in-left: slide-in-left 0.35s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  --animate-scale-in: scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pulse-soft: pulse-soft 3s ease-in-out infinite;
+  --animate-glow: glow 4s ease-in-out infinite;
+  --animate-shimmer: shimmer 2s linear infinite;
+  --animate-typing-dot: typing-dot 1.4s ease-in-out infinite;
+  --animate-heart-beat: heart-beat 1.2s ease-in-out infinite;
+  --animate-gradient-shift: gradient-shift 8s ease-in-out infinite;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* --- Keyframe Animations --- */
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 8px hsl(270, 45%, 58%, 0.15); }
+  50% { box-shadow: 0 0 24px hsl(270, 45%, 58%, 0.3); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes typing-dot {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-4px); }
+}
+
+@keyframes heart-beat {
+  0%, 100% { transform: scale(1); }
+  15% { transform: scale(1.15); }
+  30% { transform: scale(1); }
+  45% { transform: scale(1.1); }
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* --- Base Styles --- */
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-bg-deep);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  min-height: 100dvh;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* --- Scrollbar Styling --- */
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(260, 10%, 25%);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(260, 10%, 35%);
+}
+
+/* --- Selection --- */
+
+::selection {
+  background: hsl(270, 45%, 58%, 0.3);
+  color: var(--color-text-primary);
+}
+
+/* --- Focus Ring --- */
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* --- Reduced Motion --- */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- Performance / scroll --- */
+
+.chat-scroll {
+  overflow-anchor: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.content-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 80px;
+}
+
+/* --- Utility Classes --- */
+
+.glass {
+  background: hsl(260, 10%, 14%, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid hsl(260, 10%, 22%, 0.5);
+}
+
+.glass-strong {
+  background: hsl(260, 10%, 12%, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid hsl(260, 10%, 22%, 0.6);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--color-accent-light), var(--color-pink-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-bg {
+  background: linear-gradient(135deg, var(--color-accent), var(--color-pink));
+}
+
+.gradient-bg-animated {
+  background: linear-gradient(270deg, var(--color-accent), var(--color-pink), var(--color-accent-light));
+  background-size: 400% 400%;
+  animation: gradient-shift 8s ease-in-out infinite;
+}
+
+.shadow-soft {
+  box-shadow: 0 2px 12px hsl(260, 15%, 5%, 0.4),
+              0 1px 3px hsl(260, 15%, 5%, 0.2);
+}
+
+.shadow-glow {
+  box-shadow: 0 0 20px hsl(270, 45%, 58%, 0.15),
+              0 4px 16px hsl(260, 15%, 5%, 0.3);
+}
+
+.shadow-glow-pink {
+  box-shadow: 0 0 20px hsl(340, 45%, 62%, 0.15),
+              0 4px 16px hsl(260, 15%, 5%, 0.3);
+}
+
+/* --- Safe Area (mobile notches) --- */
+
+.safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 0.5rem);
+}
+
+.safe-top {
+  padding-top: max(env(safe-area-inset-top, 0px), 0.5rem);
+}
+
+/* --- Chat Bubble Tails --- */
+
+.bubble-sent {
+  border-radius: 1.25rem 1.25rem 0.25rem 1.25rem;
+}
+
+.bubble-received {
+  border-radius: 1.25rem 1.25rem 1.25rem 0.25rem;
+}
+
+/* --- Typing Dots --- */
+
+.typing-dot:nth-child(1) { animation-delay: 0s; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* --- Input autofill styling --- */
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-text-primary);
+  -webkit-box-shadow: 0 0 0px 1000px var(--color-bg-surface) inset;
+  transition: background-color 5000s ease-in-out 0s;
 }
