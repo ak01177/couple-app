@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useAuthStore } from "@/store";
 import { useCallStore } from "@/store/useCallStore";
 import { useWebRTC } from "@/hooks/useWebRTC";
@@ -10,7 +10,7 @@ import {
   useToggleMovieWatched,
   useDeleteMovie
 } from "@/hooks/useSupabase";
-import { Play, MonitorUp, PhoneOff, Mic, MicOff, Video, VideoOff, Check, Plus, Trash2, Clapperboard, Tv } from "lucide-react";
+import { Play, MonitorUp, PhoneOff, Mic, MicOff, Video, VideoOff, Check, Plus, Trash2, Clapperboard, Tv, Maximize, Minimize, List } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function WatchPage() {
@@ -30,6 +30,12 @@ export default function WatchPage() {
 
   const [newTitle, setNewTitle] = useState("");
   const [newType, setNewType] = useState<"movie" | "show">("movie");
+  const [isControlsVisible, setIsControlsVisible] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const remoteScreenRef = useRef<HTMLVideoElement>(null);
   const localScreenRef = useRef<HTMLVideoElement>(null);
@@ -70,12 +76,47 @@ export default function WatchPage() {
 
   const isInRoom = status === 'connected' && callType === 'movie_room';
 
+  const resetControls = useCallback(() => {
+    setIsControlsVisible(true);
+    if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+    controlsTimeoutRef.current = setTimeout(() => setIsControlsVisible(false), 3000);
+  }, []);
+
+  useEffect(() => {
+    if (isInRoom) resetControls();
+    return () => {
+      if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+    };
+  }, [isInRoom, resetControls]);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = async () => {
+    if (!document.fullscreenElement && containerRef.current) {
+      await containerRef.current.requestFullscreen().catch(console.error);
+    } else if (document.fullscreenElement) {
+      await document.exitFullscreen().catch(console.error);
+    }
+  };
+
   return (
-    <div className="h-full flex flex-col md:flex-row bg-black text-white overflow-hidden">
+    <div className="h-full flex flex-col md:flex-row bg-black text-white overflow-hidden relative">
 
       {/* ── MAIN STAGE (Theater) ── */}
-      <div className="flex-1 relative flex flex-col border-b md:border-b-0 md:border-r border-white/10">
-        <div className="p-4 bg-zinc-900/50 flex items-center justify-between z-10 border-b border-white/5">
+      <div 
+        ref={containerRef}
+        onMouseMove={resetControls}
+        onTouchStart={resetControls}
+        onClick={resetControls}
+        className="flex-1 relative flex flex-col bg-black md:border-r border-white/10"
+      >
+        <div className={`p-4 bg-zinc-900/50 flex items-center justify-between z-10 border-b border-white/5 transition-opacity duration-300 ${!isControlsVisible && isInRoom ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center">
               <Play size={16} className="text-white fill-current ml-0.5" />
@@ -145,9 +186,39 @@ export default function WatchPage() {
           )}
         </div>
 
+        {/* Floating Mini Cams */}
+        {isInRoom && (
+          <div className={`absolute top-20 right-4 flex flex-col gap-3 z-20 transition-opacity duration-300 ${!isControlsVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            {remoteStream && (
+              <div className="w-20 sm:w-24 md:w-32 aspect-[3/4] rounded-xl overflow-hidden shadow-2xl border-2 border-white/20 bg-zinc-900 relative">
+                <video ref={remoteCameraRef} autoPlay playsInline className="w-full h-full object-cover" />
+                <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-black/60 rounded text-[10px]">Partner</div>
+              </div>
+            )}
+            {localStream && (
+              <div className="w-20 sm:w-24 md:w-32 aspect-[3/4] rounded-xl overflow-hidden shadow-2xl border-2 border-white/20 bg-zinc-900 relative">
+                <video ref={localCameraRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" />
+                <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-black/60 rounded text-[10px]">You</div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Floating Side Action Buttons (Fullscreen & Watchlist) */}
+        {isInRoom && (
+          <div className={`absolute left-4 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-20 transition-opacity duration-300 ${!isControlsVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            <button onClick={toggleFullscreen} className="p-3 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-white hover:bg-white/20 transition-colors">
+              {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
+            </button>
+            <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-3 rounded-full bg-accent/80 backdrop-blur-md border border-white/10 text-white hover:bg-accent transition-colors shadow-lg">
+              <List size={20} />
+            </button>
+          </div>
+        )}
+
         {/* Call Controls (Bottom of Theater) */}
         {isInRoom && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-zinc-900/80 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 shadow-2xl">
+          <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-zinc-900/80 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 shadow-2xl z-20 transition-all duration-300 ${!isControlsVisible ? 'opacity-0 pointer-events-none translate-y-4' : 'opacity-100 translate-y-0'}`}>
             <button onClick={toggleMute} className={`p-3 rounded-full transition-colors ${isMuted ? 'bg-white text-black' : 'bg-white/10 hover:bg-white/20'}`}>
               {isMuted ? <MicOff size={18} /> : <Mic size={18} />}
             </button>
@@ -162,44 +233,12 @@ export default function WatchPage() {
         )}
       </div>
 
-      {/* ── SIDEBAR (Watchlist & Mini Cams) ── */}
-      <div className="w-full md:w-80 lg:w-96 bg-zinc-950 flex flex-col shrink-0">
-
-        {/* Mini Cams Container */}
-        {isInRoom && (
-          <div className="flex p-2 gap-2 border-b border-white/5 bg-zinc-900 shrink-0 overflow-x-auto">
-            {/* Local Mini Cam */}
-            {localStream && (
-              <div className="w-32 md:w-full h-32 md:h-48 rounded-xl overflow-hidden relative border border-white/10 shrink-0">
-                <video
-                  ref={localCameraRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-cover scale-x-[-1]"
-                />
-                <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-sm rounded-md text-[10px] font-medium">
-                  You
-                </div>
-              </div>
-            )}
-
-            {/* Remote Mini Cam */}
-            {remoteStream && (
-              <div className="w-32 md:w-full h-32 md:h-48 rounded-xl overflow-hidden relative border border-white/10 shrink-0">
-                <video
-                  ref={remoteCameraRef}
-                  autoPlay
-                  playsInline
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-sm rounded-md text-[10px] font-medium">
-                  Partner
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+      {/* ── SIDEBAR (Watchlist) ── */}
+      {isSidebarOpen && (
+        <div className="md:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
+      )}
+      
+      <div className={`fixed md:static inset-y-0 right-0 z-50 w-[85%] sm:w-80 md:w-80 lg:w-96 bg-zinc-950 flex flex-col shrink-0 transform transition-transform duration-300 ${isSidebarOpen || !isInRoom ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}`}>
 
         {/* Watchlist Header */}
         <div className="p-4 border-b border-white/5 shrink-0">
