@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useCallStore } from "@/store/useCallStore";
 import { useAuthStore } from "@/store";
 import { useWebRTC } from "@/hooks/useWebRTC";
@@ -32,26 +32,32 @@ export function VideoCallOverlay() {
   const { endCall, toggleMute, toggleVideo, flipCamera, toggleTorch } = useWebRTC();
   const partner = useAuthStore(s => s.partner);
   
-  const localVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const incomingCallOffer = useCallStore(s => s.incomingCallOffer);
+  const isInitiator = !incomingCallOffer;
+  
+  // Show immediately for the caller so they see themselves ringing (fixes autoplay restrictions)
+  // Only hide if we are the receiver and it's still ringing
+  const shouldShow = status === 'connected' || (status === 'ringing' && isInitiator);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (localVideoRef.current && localStream) {
-      localVideoRef.current.srcObject = localStream;
+  const handleLocalVideo = useCallback((node: HTMLVideoElement | null) => {
+    if (node && localStream) {
+      node.srcObject = localStream;
+      node.play().catch(e => console.error("Local video play error:", e));
     }
   }, [localStream]);
 
-  useEffect(() => {
-    if (remoteVideoRef.current && remoteStream) {
-      remoteVideoRef.current.srcObject = remoteStream;
+  const handleRemoteVideo = useCallback((node: HTMLVideoElement | null) => {
+    if (node && remoteStream) {
+      node.srcObject = remoteStream;
+      node.play().catch(e => console.error("Remote video play error:", e));
     }
   }, [remoteStream]);
 
-  if (status !== 'connected' || callType !== 'video') return null;
+  if (!shouldShow || callType !== 'video') return null;
 
   return (
-    <div ref={containerRef} className="fixed inset-0 z-[100] bg-black animate-fade-in flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-[100] bg-black animate-fade-in flex flex-col overflow-hidden" ref={containerRef}>
       
       {/* Remote Video (Full Screen) */}
       <div className="flex-1 relative w-full h-full">
@@ -70,20 +76,20 @@ export function VideoCallOverlay() {
           </div>
         ) : remoteStream ? (
           <video
-            ref={remoteVideoRef}
+            ref={handleRemoteVideo}
             autoPlay
             playsInline
             className="w-full h-full object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-white/50">
-            Connecting...
+            {status === 'ringing' ? 'Ringing...' : 'Connecting...'}
           </div>
         )}
         
         {/* Remote Mute Indicator */}
         {remoteIsMuted && (
-          <div className="absolute top-safe right-4 mt-4 bg-black/60 backdrop-blur px-3 py-1.5 rounded-full flex items-center gap-2 text-white/80 border border-white/10">
+          <div className="absolute top-6 right-4 mt-4 bg-black/60 backdrop-blur px-3 py-1.5 rounded-full flex items-center gap-2 text-white/80 border border-white/10">
             <MicOff size={16} />
             <span className="text-xs font-medium">Muted</span>
           </div>
@@ -105,7 +111,7 @@ export function VideoCallOverlay() {
           </div>
         ) : localStream ? (
           <video
-            ref={localVideoRef}
+            ref={handleLocalVideo}
             autoPlay
             playsInline
             muted
@@ -139,7 +145,7 @@ export function VideoCallOverlay() {
       </motion.div>
 
       {/* Controls Bar (Bottom) */}
-      <div className="absolute bottom-safe left-1/2 -translate-x-1/2 mb-8 flex items-center gap-6 glass-strong px-8 py-4 rounded-full border border-white/10 z-30">
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 mb-8 flex items-center gap-6 glass-strong px-8 py-4 rounded-full border border-white/10 z-30">
         <button
           onClick={toggleMute}
           className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
