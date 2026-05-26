@@ -26,7 +26,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             className={`
               peer w-full bg-bg-surface border border-border rounded-input
-              px-4 pt-5 pb-2 text-text-primary text-sm
+              px-4 pt-5 pb-2 text-text-primary text-base
               placeholder-transparent
               transition-all duration-200
               hover:border-border/80

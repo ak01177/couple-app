@@ -2,12 +2,17 @@ import { create } from "zustand";
 
 export type CallType = "video" | "movie_room" | "none";
 export type CallStatus = "idle" | "ringing" | "connected";
+export type FacingMode = "user" | "environment";
 
 interface CallState {
   callType: CallType;
   status: CallStatus;
   isMuted: boolean;
   isVideoOff: boolean;
+  isTorchOn: boolean;
+  facingMode: FacingMode;
+  remoteIsMuted: boolean;
+  remoteIsVideoOff: boolean;
   isScreenSharing: boolean;
   localStream: MediaStream | null;
   remoteStream: MediaStream | null;
@@ -24,6 +29,10 @@ export const useCallStore = create<CallState>((set) => ({
   status: "idle",
   isMuted: false,
   isVideoOff: false,
+  isTorchOn: false,
+  facingMode: "user", // Front camera default
+  remoteIsMuted: false,
+  remoteIsVideoOff: false,
   isScreenSharing: false,
   localStream: null,
   remoteStream: null,
@@ -47,6 +56,10 @@ export const useCallStore = create<CallState>((set) => ({
         status: "idle",
         isMuted: false,
         isVideoOff: false,
+        isTorchOn: false,
+        facingMode: "user",
+        remoteIsMuted: false,
+        remoteIsVideoOff: false,
         isScreenSharing: false,
         localStream: null,
         remoteStream: null,

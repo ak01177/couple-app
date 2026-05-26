@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useCallback, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getPosterUrl } from "@/app/actions/getPoster";
 import { useAuthStore, useChatStore, usePresenceStore, useCalendarStore } from "@/store";
@@ -451,91 +452,149 @@ export function useReactions() {
 // ============================================
 // usePresence — Online/typing presence
 // ============================================
-export function usePresence(coupleId: string | null) {
-  const user = useAuthStore((s) => s.user);
-  const { setPartnerPresence } = usePresenceStore();
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const presenceChannelRef = useRef<ReturnType<
-    ReturnType<typeof createClient>["channel"]
-  > | null>(null);
+let presenceRealtimeSubscribers = 0;
+let presenceRealtimeCoupleId: string | null = null;
+let presenceRealtimeChannel: ReturnType<
+  ReturnType<typeof createClient>["channel"]
+> | null = null;
+let presenceTypingTimeout: NodeJS.Timeout | null = null;
 
-  useEffect(() => {
-    if (!coupleId || !user) return;
+function startPresenceRealtime(coupleId: string, pathname: string) {
+  const user = useAuthStore.getState().user;
+  if (!user) return;
 
-    const supabase = createClient();
+  const supabase = createClient();
+  stopPresenceRealtime();
 
-    const channel = supabase.channel(`presence:${coupleId}`, {
-      config: { presence: { key: user.id } },
-    });
+  presenceRealtimeCoupleId = coupleId;
+  const channel = supabase.channel(`presence:${coupleId}`, {
+    config: { presence: { key: user.id } },
+  });
+  
+  presenceRealtimeChannel = channel;
 
-    presenceChannelRef.current = channel;
-
-    channel
-      .on("presence", { event: "sync" }, () => {
-        const state = channel.presenceState();
-        let foundPartner = false;
-        for (const [key, presences] of Object.entries(state)) {
-          if (key !== user.id && presences.length > 0) {
-            foundPartner = true;
-            const p = presences[0] as unknown as {
-              status: string;
-              is_typing: boolean;
-            };
-            setPartnerPresence({
-              user_id: key,
-              status: (p.status as "online" | "offline" | "away") || "online",
-              last_seen: new Date().toISOString(),
-              is_typing: p.is_typing || false,
-            });
-          }
-        }
-        if (!foundPartner) {
-          setPartnerPresence(null);
-        }
-      })
-      .subscribe(async (status) => {
-        if (status === "SUBSCRIBED") {
-          await channel.track({
-            status: "online",
-            is_typing: false,
+  channel
+    .on("presence", { event: "sync" }, () => {
+      const state = channel.presenceState();
+      let foundPartner = false;
+      const setPartnerPresence = usePresenceStore.getState().setPartnerPresence;
+      
+      for (const [key, presences] of Object.entries(state)) {
+        if (key !== user.id && presences.length > 0) {
+          foundPartner = true;
+          const p = presences[0] as unknown as {
+            status: string;
+            is_typing: boolean;
+            current_path?: string;
+          };
+          setPartnerPresence({
+            user_id: key,
+            status: (p.status as "online" | "offline" | "away") || "online",
             last_seen: new Date().toISOString(),
+            is_typing: p.is_typing || false,
+            current_path: p.current_path,
           });
         }
-      });
+      }
+      if (!foundPartner) {
+        setPartnerPresence(null);
+      }
+    })
+    .subscribe(async (status) => {
+      if (status === "SUBSCRIBED") {
+        await channel.track({
+          status: "online",
+          is_typing: false,
+          current_path: pathname,
+          last_seen: new Date().toISOString(),
+        });
+      }
+    });
+}
+
+function stopPresenceRealtime() {
+  if (presenceRealtimeChannel) {
+    const supabase = createClient();
+    supabase.removeChannel(presenceRealtimeChannel);
+    presenceRealtimeChannel = null;
+    presenceRealtimeCoupleId = null;
+    if (presenceTypingTimeout) {
+      clearTimeout(presenceTypingTimeout);
+      presenceTypingTimeout = null;
+    }
+  }
+}
+
+export function usePresence(coupleId: string | null) {
+  const user = useAuthStore((s) => s.user);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (!coupleId || !user) {
+      usePresenceStore.getState().setPartnerPresence(null);
+      return;
+    }
+
+    presenceRealtimeSubscribers += 1;
+
+    if (presenceRealtimeSubscribers === 1) {
+      startPresenceRealtime(coupleId, pathname);
+    } else if (presenceRealtimeCoupleId !== coupleId) {
+      startPresenceRealtime(coupleId, pathname);
+    }
 
     return () => {
-      presenceChannelRef.current = null;
-      supabase.removeChannel(channel);
+      presenceRealtimeSubscribers -= 1;
+      if (presenceRealtimeSubscribers <= 0) {
+        presenceRealtimeSubscribers = 0;
+        stopPresenceRealtime();
+      }
     };
-  }, [coupleId, user, setPartnerPresence]);
+  }, [coupleId, user]); // Note: excluding pathname to avoid reconnecting on every route change
+
+  // Update presence when pathname changes (without reconnecting channel)
+  useEffect(() => {
+    if (presenceRealtimeChannel && presenceRealtimeSubscribers > 0) {
+      presenceRealtimeChannel.track({
+        status: "online",
+        is_typing: false,
+        current_path: pathname,
+        last_seen: new Date().toISOString(),
+      });
+    }
+  }, [pathname]);
 
   const setTyping = useCallback(async (isTyping: boolean) => {
     if (!coupleId || !user) return;
 
-    const channel = presenceChannelRef.current;
+    const channel = presenceRealtimeChannel;
     if (!channel) return;
 
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-      typingTimeoutRef.current = null;
+    if (presenceTypingTimeout) {
+      clearTimeout(presenceTypingTimeout);
+      presenceTypingTimeout = null;
     }
 
     await channel.track({
       status: "online",
       is_typing: isTyping,
+      current_path: pathname,
       last_seen: new Date().toISOString(),
     });
 
     if (isTyping) {
-      typingTimeoutRef.current = setTimeout(() => {
-        channel.track({
-          status: "online",
-          is_typing: false,
-          last_seen: new Date().toISOString(),
-        });
+      presenceTypingTimeout = setTimeout(() => {
+        if (presenceRealtimeChannel) {
+          presenceRealtimeChannel.track({
+            status: "online",
+            is_typing: false,
+            current_path: pathname,
+            last_seen: new Date().toISOString(),
+          });
+        }
       }, 3000);
     }
-  }, [coupleId, user]);
+  }, [coupleId, user, pathname]);
 
   return { setTyping };
 }

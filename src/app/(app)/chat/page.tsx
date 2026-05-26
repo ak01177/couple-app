@@ -22,7 +22,9 @@ import {
   Zap,
   ZapOff,
 } from "lucide-react";
-import { Avatar, ChatSkeleton } from "@/components/ui";
+import { formatDistanceToNow } from "date-fns";
+import { Avatar, PartnerPuppet, ChatSkeleton } from "@/components/ui";
+
 import type { Message } from "@/types";
 import { useAuthStore, useChatStore, usePresenceStore } from "@/store";
 import {
@@ -701,7 +703,7 @@ export default function ChatPage() {
         )}
       </AnimatePresence>
 
-      <div className="h-full flex flex-col bg-bg-deep">
+      <div className="h-full flex flex-col bg-bg-deep overflow-hidden">
         {/* Chat Header */}
         <motion.header
           initial={{ opacity: 0, y: -10 }}
@@ -805,6 +807,8 @@ export default function ChatPage() {
             );
           })()}
         </AnimatePresence>
+
+        <PartnerPuppet />
 
         {/* Messages Area */}
         <div
@@ -1034,7 +1038,7 @@ export default function ChatPage() {
                   onKeyDown={handleKeyDown}
                   placeholder="Message..."
                   rows={1}
-                  className="flex-1 bg-transparent text-sm text-text-primary placeholder-text-muted px-4 py-2.5 resize-none outline-none max-h-[120px]"
+                  className="flex-1 bg-transparent text-base text-text-primary placeholder-text-muted px-4 py-2.5 resize-none outline-none max-h-[120px]"
                   style={{ minHeight: "40px" }}
                 />
                 <button className="p-2.5 text-text-muted hover:text-text-secondary transition-colors shrink-0">

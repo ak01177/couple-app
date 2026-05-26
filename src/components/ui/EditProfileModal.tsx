@@ -155,7 +155,7 @@ export function EditProfileModal({ isOpen, onClose }: EditProfileModalProps) {
               type="date"
               value={anniversary}
               onChange={(e) => setAnniversary(e.target.value)}
-              className="w-full bg-bg-elevated border border-border rounded-xl px-4 py-3 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
+              className="w-full bg-bg-elevated border border-border rounded-xl px-4 py-3 text-base text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
             />
           </div>
         </div>

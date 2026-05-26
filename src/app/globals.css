@@ -144,6 +144,8 @@
 
 * {
   -webkit-tap-highlight-color: transparent;
+  /* Prevent accidental double-tap zoom on all interactive elements */
+  touch-action: manipulation;
 }
 
 html {
@@ -151,6 +153,10 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color-scheme: dark;
+  /* Prevent rubber-banding / overscroll exposing browser chrome */
+  overscroll-behavior: none;
+  overflow: hidden;
+  height: 100%;
 }
 
 body {
@@ -158,8 +164,21 @@ body {
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   min-height: 100dvh;
-  overflow-x: hidden;
+  height: 100dvh;
+  overflow: hidden;
   line-height: 1.6;
+  /* Prevent pull-to-refresh on mobile */
+  overscroll-behavior: none;
+}
+
+/* --- iOS Auto-Zoom Prevention ---
+   iOS Safari auto-zooms the viewport when you tap an input with font-size < 16px.
+   Force all inputs/textareas to 16px to prevent this. */
+
+@supports (-webkit-touch-callout: none) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
 }
 
 /* --- Scrollbar Styling --- */
@@ -212,7 +231,10 @@ body {
 .chat-scroll {
   overflow-anchor: auto;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
+  /* GPU-accelerate scrolling for buttery smooth chat */
+  will-change: scroll-position;
+  transform: translateZ(0);
 }
 
 .content-auto {

@@ -19,6 +19,8 @@ interface WebRTCContextType {
   toggleMute: () => void;
   toggleVideo: () => void;
   toggleScreenShare: () => Promise<void>;
+  flipCamera: () => Promise<void>;
+  toggleTorch: () => Promise<void>;
 }
 
 const WebRTCContext = createContext<WebRTCContextType | null>(null);
@@ -148,6 +150,13 @@ export function WebRTCProvider({ children }: { children: React.ReactNode }) {
         if (payload.senderId === user.id) return;
         endCall(false);
       })
+      .on('broadcast', { event: 'media-state' }, ({ payload }) => {
+        if (payload.senderId === user.id) return;
+        setCallState({
+          remoteIsMuted: payload.isMuted,
+          remoteIsVideoOff: payload.isVideoOff,
+        });
+      })
       .subscribe();
 
     return () => {
@@ -166,7 +175,11 @@ export function WebRTCProvider({ children }: { children: React.ReactNode }) {
     let screenStreamId: string | undefined;
 
     try {
-      cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const facingMode = useCallStore.getState().facingMode;
+      cameraStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode }, 
+        audio: true 
+      });
       if (cameraStream) {
         cameraStream.getTracks().forEach(track => pc.addTrack(track, cameraStream!));
       }
@@ -210,7 +223,11 @@ export function WebRTCProvider({ children }: { children: React.ReactNode }) {
 
     // Guests only share camera!
     try {
-      const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const facingMode = useCallStore.getState().facingMode;
+      const cameraStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode }, 
+        audio: true 
+      });
       setCallState({ localStream: cameraStream });
       cameraStream.getTracks().forEach(track => pc.addTrack(track, cameraStream));
     } catch (e) {
@@ -229,24 +246,40 @@ export function WebRTCProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const broadcastMediaState = (isMuted: boolean, isVideoOff: boolean) => {
+    if (channelRef.current) {
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'media-state',
+        payload: { isMuted, isVideoOff, senderId: user?.id }
+      });
+    }
+  };
+
   const toggleMute = () => {
-    const stream = useCallStore.getState().localStream;
+    const state = useCallStore.getState();
+    const stream = state.localStream;
     if (stream) {
       const audioTrack = stream.getAudioTracks()[0];
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
-        setCallState({ isMuted: !audioTrack.enabled });
+        const newIsMuted = !audioTrack.enabled;
+        setCallState({ isMuted: newIsMuted });
+        broadcastMediaState(newIsMuted, state.isVideoOff);
       }
     }
   };
 
   const toggleVideo = () => {
-    const stream = useCallStore.getState().localStream;
+    const state = useCallStore.getState();
+    const stream = state.localStream;
     if (stream) {
       const videoTrack = stream.getVideoTracks()[0];
       if (videoTrack) {
         videoTrack.enabled = !videoTrack.enabled;
-        setCallState({ isVideoOff: !videoTrack.enabled });
+        const newIsVideoOff = !videoTrack.enabled;
+        setCallState({ isVideoOff: newIsVideoOff });
+        broadcastMediaState(state.isMuted, newIsVideoOff);
       }
     }
   };
@@ -284,9 +317,68 @@ export function WebRTCProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const flipCamera = async () => {
+    if (!pcRef.current) return;
+    const state = useCallStore.getState();
+    const stream = state.localStream;
+    if (!stream) return;
+
+    try {
+      const currentMode = state.facingMode;
+      const newMode = currentMode === "user" ? "environment" : "user";
+      
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: newMode },
+        audio: false // We keep the existing audio track
+      });
+      
+      const newVideoTrack = newStream.getVideoTracks()[0];
+      const oldVideoTrack = stream.getVideoTracks()[0];
+      
+      if (newVideoTrack && oldVideoTrack) {
+        // Replace track in peer connection
+        const sender = pcRef.current.getSenders().find(s => s.track?.kind === 'video');
+        if (sender) await sender.replaceTrack(newVideoTrack);
+        
+        // Stop old track and swap in local stream
+        oldVideoTrack.stop();
+        stream.removeTrack(oldVideoTrack);
+        stream.addTrack(newVideoTrack);
+        
+        // Match current video off state
+        newVideoTrack.enabled = !state.isVideoOff;
+        
+        setCallState({ facingMode: newMode, isTorchOn: false }); // Reset torch on flip
+      }
+    } catch (e) {
+      console.error("Failed to flip camera", e);
+    }
+  };
+
+  const toggleTorch = async () => {
+    const state = useCallStore.getState();
+    const stream = state.localStream;
+    if (!stream) return;
+
+    const videoTrack = stream.getVideoTracks()[0];
+    if (!videoTrack) return;
+
+    try {
+      const newTorchState = !state.isTorchOn;
+      // applyConstraints is not fully typed for advanced torch support in TS
+      await videoTrack.applyConstraints({
+        advanced: [{ torch: newTorchState } as any]
+      });
+      setCallState({ isTorchOn: newTorchState });
+    } catch (e) {
+      console.error("Torch error:", e);
+    }
+  };
+
   return (
-    <WebRTCContext.Provider value={{ startCall, answerCall, endCall, toggleMute, toggleVideo, toggleScreenShare }
-    }>
+    <WebRTCContext.Provider value={{ 
+      startCall, answerCall, endCall, toggleMute, toggleVideo, toggleScreenShare, flipCamera, toggleTorch 
+    }}>
       {children}
     </WebRTCContext.Provider>
   );

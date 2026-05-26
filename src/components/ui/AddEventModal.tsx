@@ -104,7 +104,7 @@ export function AddEventModal({ isOpen, onClose, initialDate }: AddEventModalPro
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="E.g., Math Final Exam"
-                    className="w-full bg-bg-elevated border border-border/40 rounded-xl py-3 pl-10 pr-4 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all"
+                    className="w-full bg-bg-elevated border border-border/40 rounded-xl py-3 pl-10 pr-4 text-base text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all"
                     required
                   />
                 </div>

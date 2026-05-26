@@ -13,3 +13,4 @@ export { PrivateImage } from "./PrivateImage";
 export { ConnectionBanner } from "./ConnectionBanner";
 export { ChatSkeleton } from "./ChatSkeleton";
 export { EditProfileModal } from "./EditProfileModal";
+export { PartnerPuppet } from "./PartnerPuppet";

@@ -4,7 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Home, MessageCircle, Camera, Settings, Calendar } from "lucide-react";
 import { startTransition, useEffect } from "react";
-import { useAuth } from "@/hooks/useSupabase";
+import { useAuth, usePresence } from "@/hooks/useSupabase";
 import { useAuthStore, useChatStore } from "@/store";
 import { ConnectionBanner } from "@/components/ui/ConnectionBanner";
 import { CallProvider } from "@/components/providers/CallProvider";
@@ -39,8 +39,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Call the hook to listen to auth state & load user/partner/couple details
   useAuth();
 
-  const { user, isLoading } = useAuthStore();
+  const { user, isLoading, coupleId } = useAuthStore();
   const messages = useChatStore((s) => s.messages);
+
+  // Global presence tracking
+  usePresence(coupleId);
 
   // Count unread messages from partner
   const unreadCount = messages.filter(

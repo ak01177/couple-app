@@ -116,6 +116,7 @@ export type PresenceState = {
   status: OnlineStatus;
   last_seen: string;
   is_typing: boolean;
+  current_path?: string;
 };
 
 export type CoupleSong = {

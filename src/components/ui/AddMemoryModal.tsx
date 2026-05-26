@@ -19,7 +19,7 @@ export function AddMemoryModal({ isOpen, onClose }: AddMemoryModalProps) {
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [isUploading, setIsUploading] = useState(false);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadMedia = useUploadMedia();
   const addMemory = useAddMemory();
@@ -41,7 +41,7 @@ export function AddMemoryModal({ isOpen, onClose }: AddMemoryModalProps) {
     try {
       const compressed = await compressImage(file);
       const mediaPath = await uploadMedia(compressed, "memories");
-      
+
       if (mediaPath) {
         // 2. Add memory to database
         // Need to pass date as ISO string or whatever the db expects
@@ -78,7 +78,7 @@ export function AddMemoryModal({ isOpen, onClose }: AddMemoryModalProps) {
             onClick={handleClose}
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           />
-          
+
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -98,7 +98,7 @@ export function AddMemoryModal({ isOpen, onClose }: AddMemoryModalProps) {
 
             {/* Form Content */}
             <form onSubmit={handleSubmit} className="p-4 overflow-y-auto flex-1 space-y-4">
-              
+
               {/* Image Picker */}
               <div>
                 <input
@@ -108,7 +108,7 @@ export function AddMemoryModal({ isOpen, onClose }: AddMemoryModalProps) {
                   onChange={handleFileChange}
                   className="hidden"
                 />
-                
+
                 {previewUrl ? (
                   <div className="relative rounded-2xl overflow-hidden aspect-video bg-black flex items-center justify-center group">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -147,7 +147,7 @@ export function AddMemoryModal({ isOpen, onClose }: AddMemoryModalProps) {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Paris Trip 2024"
-                  className="w-full bg-bg-elevated border border-border/60 rounded-xl px-4 py-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all"
+                  className="w-full bg-bg-elevated border border-border/60 rounded-xl px-4 py-3 text-base text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all"
                 />
               </div>
 
@@ -177,7 +177,7 @@ export function AddMemoryModal({ isOpen, onClose }: AddMemoryModalProps) {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Write something about this moment..."
                   rows={3}
-                  className="w-full bg-bg-elevated border border-border/60 rounded-xl px-4 py-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all resize-none"
+                  className="w-full bg-bg-elevated border border-border/60 rounded-xl px-4 py-3 text-base text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all resize-none"
                 />
               </div>
 
