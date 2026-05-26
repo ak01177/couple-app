@@ -16,28 +16,39 @@ export default function SplashPage() {
   useEffect(() => {
     let cancelled = false;
 
-    const showTimer = setTimeout(() => setPhase("showing"), 400);
-    const leaveTimer = setTimeout(() => setPhase("leaving"), 2600);
-    const navigateTimer = setTimeout(async () => {
-      if (cancelled) return;
+    // Show the loading text slightly faster
+    const showTimer = setTimeout(() => setPhase("showing"), 150);
 
+    const checkAuthAndNavigate = async () => {
+      const startTime = Date.now();
       const supabase = createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
-      const destination = user ? "/home" : "/login";
+      const elapsed = Date.now() - startTime;
+      const minDelay = 800; // Only wait 800ms minimum for the animation
+      const remainingTime = Math.max(0, minDelay - elapsed);
 
-      startTransition(() => {
-        router.replace(destination);
-      });
-    }, 3200);
+      setTimeout(() => {
+        if (cancelled) return;
+        setPhase("leaving");
+
+        setTimeout(() => {
+          if (cancelled) return;
+          const destination = user ? "/home" : "/login";
+          startTransition(() => {
+            router.replace(destination);
+          });
+        }, 300); // Wait just 300ms for the leaving animation to play
+      }, remainingTime);
+    };
+
+    checkAuthAndNavigate();
 
     return () => {
       cancelled = true;
       clearTimeout(showTimer);
-      clearTimeout(leaveTimer);
-      clearTimeout(navigateTimer);
     };
   }, [router]);
 
