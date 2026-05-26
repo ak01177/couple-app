@@ -18,6 +18,9 @@ import {
   Pin,
   PinOff,
   Video as VideoIcon,
+  SwitchCamera,
+  Zap,
+  ZapOff,
 } from "lucide-react";
 import { Avatar, ChatSkeleton } from "@/components/ui";
 import type { Message } from "@/types";
@@ -592,13 +595,34 @@ export default function ChatPage() {
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 bg-black flex flex-col"
         >
-          {/* Close button */}
-          <button
-            onClick={camera.close}
-            className="absolute top-4 left-4 z-10 p-2 rounded-full bg-black/50 text-white"
-          >
-            <X size={22} />
-          </button>
+          {/* Top Controls */}
+          <div className="absolute top-4 inset-x-4 z-10 flex justify-between items-center">
+            <button
+              onClick={camera.close}
+              className="p-2 rounded-full bg-black/50 text-white transition-transform active:scale-95"
+            >
+              <X size={22} />
+            </button>
+            
+            {!camera.capturedUrl && (
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={camera.toggleTorch}
+                  className={`p-2 rounded-full bg-black/50 transition-colors active:scale-95 ${
+                    camera.isTorchOn ? "text-yellow-400" : "text-white"
+                  }`}
+                >
+                  {camera.isTorchOn ? <Zap size={22} /> : <ZapOff size={22} />}
+                </button>
+                <button
+                  onClick={camera.flipCamera}
+                  className="p-2 rounded-full bg-black/50 text-white transition-transform active:scale-95"
+                >
+                  <SwitchCamera size={22} />
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Video / Preview */}
           <div className="flex-1 relative overflow-hidden">
